@@ -1,0 +1,69 @@
+categories:
+  SELECT
+    DISTINCT {category}
+  FROM
+    `{project_id}.data.products`
+  WHERE {category} IS NOT NULL
+    AND {category} != ''
+
+# Single Query to do everything with the new architecture
+retrieve_features:
+  WITH events_known AS (
+    SELECT
+      known.id, event_timestamp, known
+    FROM
+      `{project_id}.data.events` AS EVENTS
+    INNER JOIN (
+      SELECT
+        id, TRUE AS known
+      FROM
+        `{project_id}.data.known_ids`
+      GROUP BY
+        id) AS known
+    USING(id)),
+       id_pending AS (
+    SELECT
+      id
+    FROM
+      events_known
+    WHERE DATE(event_timestamp) <= PARSE_DATE("%Y%m%d",'{data_date}')
+      AND DATE(event_timestamp)  > DATE_ADD(PARSE_DATE("%Y%m%d",'{data_date}'), INTERVAL -28 DAY)
+      {known_filter}
+    GROUP BY
+      id),
+       id_selected AS (
+    SELECT
+      id, count(*) AS cnt
+    FROM
+      `{project_id}.data.events`
+    WHERE id IN (SELECT id FROM id_pending)
+      AND DATE(event_timestamp) >= PARSE_DATE("%Y%m%d",'{date_begin_hist}')
+      AND DATE(event_timestamp)  < PARSE_DATE("%Y%m%d",'{data_date}')
+    GROUP BY
+      id
+    HAVING
+      cnt > 5 
+      # TODO: 5 AS A PARAMETER?
+  )
+  SELECT
+    {features_event}, visits.*, products.*
+  FROM
+    `{project_id}.data.events` AS events
+  LEFT JOIN (
+    SELECT
+      key, {features_visit}
+    FROM
+      `{project_id}.data.visits`
+    WHERE DATE(visit_timestamp) >= PARSE_DATE("%Y%m%d",'{date_begin_hist}')
+      AND DATE(visit_timestamp)  < PARSE_DATE("%Y%m%d",'{date_end_hist}')
+      ) AS visits
+  USING(key)
+  INNER JOIN (
+    SELECT
+      product_id, {features_product}
+    FROM
+      `{project_id}.data.products`) AS products
+  USING(product_id)
+  WHERE id in (SELECT id FROM id_selected)
+    AND DATE(event_timestamp) >= PARSE_DATE("%Y%m%d",'{date_begin_hist}')
+    AND DATE(event_timestamp)  < PARSE_DATE("%Y%m%d",'{date_end_hist}')

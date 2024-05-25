@@ -1,0 +1,17 @@
+pipeline {
+  agent any
+  stages {
+    stage('Build Code') {
+      steps {
+        echo 'Build core code'
+          sh './build/run.sh build-app'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        echo "Push all the deb files in build repository"
+          sh './build/run.sh deploy'
+      }
+    }
+  }
+}

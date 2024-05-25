@@ -1,0 +1,11 @@
+google_cloud:
+    credentials_json_file: ''
+    project_prefix: ''
+
+google_gcs:
+    bucket_prefix: ''
+
+backoffice:
+    url: 
+    login:
+    password:
