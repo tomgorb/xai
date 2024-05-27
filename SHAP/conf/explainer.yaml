@@ -1,0 +1,10 @@
+google_cloud:
+    credentials_json_file: ''
+    project_id: ''
+    project_prefix: ''
+
+google_gcs:
+    bucket_prefix: ''
+
+google_bq:
+    dataset_prefix: ''

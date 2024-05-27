@@ -1,0 +1,7 @@
+shap==0.37.0
+google_pandas_load==1.0.0
+pandas==0.25.3
+numpy==1.18.5
+purchase_probability==2.0.1
+dill==0.3.3
+# tensorflow==1.15.0
